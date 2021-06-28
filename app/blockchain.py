@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import json
 from urllib.parse import urlparse
+import requests
 
 
 class Blockchain:
@@ -68,3 +69,22 @@ class Blockchain:
     def add_node(self, address):
         parsed_url = urlparse(address)
         self.nodes.add(parsed_url.netloc)
+
+    def replace_chain(self):
+        network = self.nodes
+        longest_chain = None
+        max_length = len(self.chain)
+
+        for node in network:
+            resp = requests.get(f'http://{node}/get_chain')
+            if resp.status_code == 200:
+                length = resp.json()['length']
+                chain = resp.json()['chain']
+                if length > max_length and self.is_chain_valid(chain):
+                    max_length = length
+                    longest_chain = chain
+        if longest_chain:
+            self.chain = longest_chain
+            return True
+
+        return False
