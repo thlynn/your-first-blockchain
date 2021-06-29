@@ -54,10 +54,6 @@ def is_valid():
     return jsonify(response), 200
 
 
-# Running the app
-app.run(host='0.0.0.0', port=5000)
-
-
 # Add a new transaction to the Blockchain
 @app.route('/add_transaction', methods=['POST'])
 def add_transaction():
@@ -70,3 +66,37 @@ def add_transaction():
     
     response = {'message': f'This transaction will be added in Block {index}'}
     return jsonify(response), 201
+
+
+# Connecting new nodes
+@app.route('/connect_node', methods=['POST'])
+def connect_node():
+    json = Request.get_json()
+    nodes = json.get('nodes')
+
+    if nodes is not None:
+        return "No node", 400
+
+    for node in nodes:
+        blockchain.add_node(node)
+    
+    response = {'message': f'All the nodes are now connected.',
+                'total_nodes': list(blockchain.nodes)}
+
+    return jsonify(response), 201
+
+
+# Checking if the Blockchain is valid
+@app.route('/replace_chain', methods=['GET'])
+def is_valid():
+    is_chain_replaced = blockchain.replace_chain()
+    if is_chain_replaced:
+        response = {'message': 'The chain was replaced by the longest one.'}
+    else:
+        response = {'message': 'The chain is the longest one'}
+
+    return jsonify(response), 200
+
+
+# Running the app
+app.run(host='0.0.0.0', port=5000)
